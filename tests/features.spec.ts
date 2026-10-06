@@ -1,0 +1,27 @@
+import {test,expect} from '@playwright/test';
+import {readFile} from 'node:fs/promises';
+test('mounting exports, guide offsets and saved variant application',async({page})=>{
+  test.setTimeout(90000);
+  const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));
+  await page.goto('/');
+  await page.getByLabel('Frame style').selectOption('raised');
+  await page.getByLabel('Mounting option').selectOption('hanging');
+  await expect(page.getByRole('button',{name:'Export STL'})).toBeEnabled({timeout:30000});
+  await page.getByRole('button',{name:'Top',exact:true}).click();
+  await page.screenshot({path:'test-results/frame-hanging.png',fullPage:true});
+  await page.getByLabel('Mounting option').selectOption('magnets');
+  await expect(page.getByRole('button',{name:'Export STL'})).toBeEnabled({timeout:30000});
+  await page.getByRole('button',{name:'Back view',exact:true}).click();
+  await page.screenshot({path:'test-results/magnet-back.png',fullPage:true});
+  const [guide]=await Promise.all([page.waitForEvent('download'),page.getByRole('button',{name:'Download print guide'}).click()]);
+  const text=await readFile((await guide.path())!,'utf8');expect(text).toContain('Total layers including backing: 48');expect(text).toContain('6.3 mm diameter × 2 mm deep');
+  await page.getByRole('button',{name:'Save current comparison'}).click();
+  await page.getByRole('button',{name:'Apply Coastal blue'}).click();await expect(page.locator('#layers')).toHaveValue('32');await expect(page.getByLabel('AMS colour 1')).toHaveValue('#183744');
+  await page.getByRole('button',{name:'Apply My comparison'}).click();await expect(page.locator('#layers')).toHaveValue('24');
+  await page.getByLabel('Mounting option').selectOption('stand');await expect(page.getByRole('button',{name:'Download stand STL'})).toBeEnabled({timeout:30000});
+  await page.getByRole('button',{name:'Preview stand'}).click();
+  await page.screenshot({path:'test-results/stand.png',fullPage:true});
+  const [stl]=await Promise.all([page.waitForEvent('download'),page.getByRole('button',{name:'Download stand STL'}).click()]);
+  expect(stl.suggestedFilename()).toContain('-stand.stl');const data=await readFile((await stl.path())!);expect(data.length).toBe(84+data.readUInt32LE(80)*50);
+  expect(errors).toEqual([]);
+});

@@ -1,6 +1,8 @@
-export type Settings = { width: number; layers: number; layerHeight: number; baseLayers: number; resolution: number; contrast: number; invert: boolean; colors: string[] };
+export type Settings = { width: number; layers: number; layerHeight: number; baseLayers: number; resolution: number; contrast: number; invert: boolean; colors: string[]; frame: 'none' | 'flat' | 'raised'; frameWidth: number; mount: 'none' | 'hanging' | 'magnets' | 'stand'; holeDiameter: number; magnetDiameter: number; magnetDepth: number };
 export type Relief = { positions: Float32Array; width: number; height: number; maxZ: number; sampleWidth: number; sampleHeight: number };
-export const defaults: Settings = { width: 150, layers: 24, layerHeight: 0.12, baseLayers: 4, resolution: 160, contrast: 1.1, invert: false, colors: ['#253d38', '#bd7352', '#dfb977', '#f3e7cd'] };
+export const defaults: Settings = { width: 150, layers: 24, layerHeight: 0.12, baseLayers: 4, resolution: 160, contrast: 1.1, invert: false, colors: ['#253d38', '#bd7352', '#dfb977', '#f3e7cd'], frame: 'none', frameWidth: 5, mount: 'none', holeDiameter: 4, magnetDiameter: 6, magnetDepth: 2 };
+export function backingLayers(s: Settings) { return s.mount === 'magnets' ? Math.ceil((s.magnetDepth + .8) / s.layerHeight) : 0; }
+export function printSettings(s: Settings): Settings { const extra = backingLayers(s); return {...s, layers: s.layers + extra, baseLayers: s.baseLayers + extra}; }
 export function colorIndex(layer: number, s: Settings) {
   return Math.min(s.colors.length - 1, Math.max(0, Math.floor((layer - s.baseLayers) / (s.layers - s.baseLayers + 1) * s.colors.length)));
 }

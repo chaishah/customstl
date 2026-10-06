@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 test('upload, configure, preview and export',async({page})=>{
   const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()==='error'&&m.text().includes('THREE'))errors.push(m.text());});
   await page.goto('/');await expect(page.getByRole('button',{name:'Export STL'})).toBeEnabled();
-  await expect(page.locator('canvas')).toBeVisible();
+  await expect(page.locator('.scene canvas')).toBeVisible();
   await page.screenshot({path:'test-results/desktop.png',fullPage:true});
   await page.locator('#layers').fill('32');await expect(page.locator('output').first()).toContainText('32');
   await page.getByLabel('AMS colour 2').fill('#ff7722');
@@ -18,4 +18,4 @@ test('upload, configure, preview and export',async({page})=>{
   await page.getByLabel('Upload image').setInputFiles({name:'bad.txt',mimeType:'text/plain',buffer:Buffer.from('no')});await expect(page.getByRole('alert')).toContainText('Choose a PNG');
   expect(errors).toEqual([]);
 });
-test('mobile fits the viewport',async({page})=>{await page.setViewportSize({width:390,height:844});await page.goto('/');await expect(page.locator('canvas')).toBeVisible();expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBe(390);await page.screenshot({path:'test-results/mobile.png',fullPage:true});});
+test('mobile fits the viewport',async({page})=>{await page.setViewportSize({width:390,height:844});await page.goto('/');await expect(page.locator('.scene canvas')).toBeVisible();expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBe(390);await page.screenshot({path:'test-results/mobile.png',fullPage:true});});

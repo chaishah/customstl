@@ -23,6 +23,7 @@
   "description": "Private image-to-STL relief studio with four-colour AMS preview",
   "dependencies": {
     "lucide-react": "^1.52.0",
+    "manifold-3d": "^3.5.4",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
     "three": "^0.186.1"
