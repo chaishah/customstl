@@ -1,0 +1,21 @@
+import { test, expect } from '@playwright/test';
+test('upload, configure, preview and export',async({page})=>{
+  const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()==='error'&&m.text().includes('THREE'))errors.push(m.text());});
+  await page.goto('/');await expect(page.getByRole('button',{name:'Export STL'})).toBeEnabled();
+  await expect(page.locator('canvas')).toBeVisible();
+  await page.screenshot({path:'test-results/desktop.png',fullPage:true});
+  await page.locator('#layers').fill('32');await expect(page.locator('output').first()).toContainText('32');
+  await page.getByLabel('AMS colour 2').fill('#ff7722');
+  await page.getByRole('button',{name:'Remove last colour'}).click();await expect(page.getByLabel('AMS colour 4')).toHaveCount(0);
+  await page.getByRole('button',{name:'Add AMS colour'}).click();await expect(page.getByLabel('AMS colour 4')).toBeVisible();
+  await expect(page.getByRole('button',{name:'Add AMS colour'})).toHaveCount(0);
+  const png=await page.locator('.source img').evaluate((el:HTMLImageElement)=>el.src.split(',')[1]);
+  await page.getByLabel('Upload image').setInputFiles({name:'my-art.png',mimeType:'image/png',buffer:Buffer.from(png,'base64')});
+  await expect(page.locator('.source strong')).toHaveText('my-art');await expect(page.getByRole('button',{name:'Export STL'})).toBeEnabled();
+  await page.getByRole('button',{name:'Top',exact:true}).click();
+  const [download]=await Promise.all([page.waitForEvent('download'),page.getByRole('button',{name:'Export STL'}).click()]);expect(download.suggestedFilename()).toBe('my-art.stl');
+  const [guide]=await Promise.all([page.waitForEvent('download'),page.getByRole('button',{name:'Download print guide'}).click()]);expect(guide.suggestedFilename()).toBe('my-art-print-guide.txt');
+  await page.getByLabel('Upload image').setInputFiles({name:'bad.txt',mimeType:'text/plain',buffer:Buffer.from('no')});await expect(page.getByRole('alert')).toContainText('Choose a PNG');
+  expect(errors).toEqual([]);
+});
+test('mobile fits the viewport',async({page})=>{await page.setViewportSize({width:390,height:844});await page.goto('/');await expect(page.locator('canvas')).toBeVisible();expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBe(390);await page.screenshot({path:'test-results/mobile.png',fullPage:true});});
